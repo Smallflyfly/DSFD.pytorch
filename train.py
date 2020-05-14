@@ -118,6 +118,7 @@ def train():
         print('Load base network {}'.format(args.save_folder + basenet))
         if args.model == 'vgg':
             net.vgg.load_state_dict(base_weights)
+            net.vgg.load_state_dict({k.replace('module.', ''): v for k, v in base_weights.items()})
         else:
             net.resnet.load_state_dict(base_weights)
 
