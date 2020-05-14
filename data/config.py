@@ -60,7 +60,7 @@ _C.NEG_POS_RATIOS = 3
 _C.NUM_CLASSES = 2
 
 # dataset config
-_C.HOME = '/home/lijun/data/'
+_C.HOME = '/media/smallflyfly/Data/DSFD.pytorch/data'
 
 
 # face config
