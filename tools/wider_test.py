@@ -232,7 +232,7 @@ if __name__ == '__main__':
             fout.write('{:s}\n'.format(event[0][0].encode(
                 'utf-8') + '/' + im_name + '.jpg'))
             fout.write('{:d}\n'.format(dets.shape[0]))
-            for i in xrange(dets.shape[0]):
+            for i in range(dets.shape[0]):
                 xmin = dets[i][0]
                 ymin = dets[i][1]
                 xmax = dets[i][2]
