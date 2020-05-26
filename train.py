@@ -107,6 +107,7 @@ def train():
 
     basenet = basenet_factory(args.model)
     dsfd_net = build_net('train', cfg.NUM_CLASSES, args.model)
+    # net = torch.nn.DataParallel(dsfd_net)
     net = dsfd_net
 
     if args.resume:
@@ -116,9 +117,10 @@ def train():
     else:
         base_weights = torch.load(args.save_folder + basenet)
         print('Load base network {}'.format(args.save_folder + basenet))
+
         if args.model == 'vgg':
-            net.vgg.load_state_dict(base_weights)
-            net.vgg.load_state_dict({k.replace('module.', ''): v for k, v in base_weights.items()})
+            net.load_state_dict({k.replace('module.',''):v for k,v in base_weights.items()})
+            # net.vgg.load_state_dict({k.replace('module.', ''): v for k, v in base_weights.items()})
         else:
             net.resnet.load_state_dict(base_weights)
 
@@ -178,7 +180,9 @@ def train():
             loss.backward()
             optimizer.step()
             t1 = time.time()
-            losses += loss.data[0]
+            # print(loss)
+            # losses += loss.data[0]
+            losses += loss.data
 
             if iteration % 10 == 0:
                 tloss = losses / (batch_idx + 1)
@@ -186,9 +190,11 @@ def train():
                 print('epoch:' + repr(epoch) + ' || iter:' +
                       repr(iteration) + ' || Loss:%.4f' % (tloss))
                 print('->> pal1 conf loss:{:.4f} || pal1 loc loss:{:.4f}'.format(
-                    loss_c_pal1.data[0], loss_l_pa1l.data[0]))
+                    # loss_c_pal1.data[0], loss_l_pa1l.data[0]))
+                    loss_c_pal1.data, loss_l_pa1l.data))
                 print('->> pal2 conf loss:{:.4f} || pal2 loc loss:{:.4f}'.format(
-                    loss_c_pal2.data[0], loss_l_pa12.data[0]))
+                    # loss_c_pal2.data[0], loss_l_pa12.data[0]))
+                    loss_c_pal2.data, loss_l_pa12.data))
                 print('->>lr:{}'.format(optimizer.param_groups[0]['lr']))
 
             if iteration != 0 and iteration % 5000 == 0:
@@ -221,7 +227,8 @@ def val(epoch, net, dsfd_net, criterion):
         loss_l_pa1l, loss_c_pal1 = criterion(out[:3], targets)
         loss_l_pa12, loss_c_pal2 = criterion(out[3:], targets)
         loss = loss_l_pa12 + loss_c_pal2
-        losses += loss.data[0]
+        # losses += loss.data[0]
+        losses += loss.data
         step += 1
 
     tloss = losses / step
