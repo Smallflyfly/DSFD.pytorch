@@ -9,7 +9,7 @@ import shutil
 name_count = 0
 name_str = '000000'
 
-path = './'
+path = './AFDB_masked_face_dataset'
 save_image_path = './images/'
 list_fold = os.listdir(path)
 for fold in list_fold:
