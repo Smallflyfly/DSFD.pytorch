@@ -29,13 +29,13 @@ parser.add_argument('--network',
                     choices=['vgg', 'resnet50', 'resnet101', 'resnet152'],
                     help='model for training')
 parser.add_argument('--save_dir',
-                    type=str, default='mask_pic/',
+                    type=str, default='./mask_pic/',
                     help='Directory for detect result')
 parser.add_argument('--model',
                     type=str,
                     default='weights/dsfd_face.pth', help='trained model')
 parser.add_argument('--thresh',
-                    default=0.4, type=float,
+                    default=0.6, type=float,
                     help='Final confidence threshold')
 args = parser.parse_args()
 
@@ -50,8 +50,9 @@ if use_cuda:
 else:
     torch.set_default_tensor_type('torch.FloatTensor')
 
-name_count = 0
-name_ss = '000000'
+global name_count
+global name_ss
+
 
 def detect(net, img_path, thresh):
     img = Image.open(img_path)
@@ -85,21 +86,23 @@ def detect(net, img_path, thresh):
     origin_img = Image.open(img_path)
 
     for i in range(detections.size(1)):
+        j = 0
         while detections[0, i, j, 0] >= thresh:
             # score = detections[0, i, j, 0]
             pt = (detections[0, i, j, 1:] * scale).cpu().numpy().astype(int)
             # left_up, right_bottom = (pt[0], pt[1]), (pt[2], pt[3])
             xmin, ymin, xmax, ymax = pt[0], pt[1], pt[2], pt[3]
-            xmin = min(0, xmin-20)
-            ymin = min(0, ymin-20)
-            xmax = min(width, xmax+20)
-            ymax = min(height, ymax+20)
+            xmin = max(0, xmin-5)
+            ymin = max(0, ymin-5)
+            xmax = min(width, xmax+5)
+            ymax = min(height, ymax+5)
             crop_img = origin_img.crop((xmin, ymin, xmax, ymax))
+            crop_img = crop_img.convert('RGB')
+            global name_count
             name_count += 1
-            filename = (name_ss + name_count)[-6:]
-            crop_img.save(args.save_dir + filename + img_type)
-            break
-
+            filename = (name_ss + str(name_count))[-6:]
+            print(args.save_dir + filename + img_type)
+            crop_img.save(args.save_dir + filename + '.' + img_type)
             j += 1
             # cv2.rectangle(img, left_up, right_bottom, (0, 0, 255), 1)
             # conf = "{:.2f}".format(score)
@@ -122,11 +125,14 @@ if __name__ == '__main__':
     net.load_state_dict(torch.load(args.model))
     net.eval()
 
+    name_count = 0
+    name_ss = '000000'
+
     if use_cuda:
         net.cuda()
         cudnn.benckmark = True
 
-    img_path = './img'
+    img_path = './masks'
     img_list = [os.path.join(img_path, x)
                 for x in os.listdir(img_path) if x.endswith('jpg') or x.endswith('jpeg')]
     for path in img_list:
